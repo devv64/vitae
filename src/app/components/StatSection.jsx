@@ -10,7 +10,7 @@ const StatSection = () => {
       content: (
         <>
           Planning your tasks can boost your efficiency{" "}
-          <span className="underline">up to 25%!</span>
+          <span className="font-bold">up to 25%!</span>
         </>
       ),
     },
@@ -18,7 +18,7 @@ const StatSection = () => {
       content: (
         <>
           Writing down your goals boosts your chances of{" "}
-          <span className="underline">success by 42%!</span>
+          <span className="font-bold">success by 42%!</span>
         </>
       ),
     },
@@ -26,7 +26,7 @@ const StatSection = () => {
       content: (
         <>
           Effective task management can help you save{" "}
-          <span className="underline">up to 2 hours</span> each day!
+          <span className="font-bold">up to 2 hours</span> each day!
         </>
       ),
     },

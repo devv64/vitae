@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Plus, X, CalendarIcon, Clock } from "lucide-react";
+import { Plus, X, CalendarIcon, Clock, Edit, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const localizer = momentLocalizer(moment);
@@ -17,6 +17,8 @@ const CalendarPage = () => {
       start: new Date(2024, 9, 10, 10, 0),
       end: new Date(2024, 9, 10, 12, 0),
       category: "work",
+      description: "",
+      location: "",
     },
     {
       id: 1,
@@ -24,12 +26,15 @@ const CalendarPage = () => {
       start: new Date(2024, 9, 11, 12, 0),
       end: new Date(2024, 9, 11, 13, 0),
       category: "personal",
+      description: "",
+      location: "",
     },
   ]);
 
   const [view, setView] = useState(Views.WEEK);
   const [date, setDate] = useState(new Date());
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({
     title: "",
     start: new Date(),
@@ -40,11 +45,18 @@ const CalendarPage = () => {
   });
 
   const handleSelectSlot = ({ start, end }) => {
+    setEditingEvent(null);
     setNewEvent({
       ...newEvent,
       start,
       end,
     });
+    setModalOpen(true);
+  };
+
+  const handleSelectEvent = (event) => {
+    setEditingEvent(event);
+    setNewEvent(event);
     setModalOpen(true);
   };
 
@@ -64,8 +76,17 @@ const CalendarPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setEvents((prev) => [...prev, { ...newEvent, id: prev.length }]);
+    if (editingEvent) {
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === editingEvent.id ? { ...newEvent } : event
+        )
+      );
+    } else {
+      setEvents((prev) => [...prev, { ...newEvent, id: prev.length }]);
+    }
     setModalOpen(false);
+    setEditingEvent(null);
     setNewEvent({
       title: "",
       start: new Date(),
@@ -74,6 +95,22 @@ const CalendarPage = () => {
       location: "",
       category: "",
     });
+  };
+
+  const handleDeleteEvent = () => {
+    if (editingEvent) {
+      setEvents((prev) => prev.filter((event) => event.id !== editingEvent.id));
+      setModalOpen(false);
+      setEditingEvent(null);
+      setNewEvent({
+        title: "",
+        start: new Date(),
+        end: new Date(),
+        description: "",
+        location: "",
+        category: "",
+      });
+    }
   };
 
   const moveEvent = ({ event, start, end }) => {
@@ -103,7 +140,7 @@ const CalendarPage = () => {
     return {
       className: `${
         categoryColors[event.category] || "bg-green-500"
-      } text-white rounded-lg border-none`,
+      } text-white rounded-lg border-none cursor-pointer`,
     };
   };
 
@@ -132,192 +169,200 @@ const CalendarPage = () => {
   );
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            className="flex justify-between items-center mb-8"
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            transition={{ delay: 0.2 }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen"
+    >
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          className="flex justify-between items-center mb-8"
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center space-x-3">
+            <CalendarIcon className="w-8 h-8 text-green-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setEditingEvent(null);
+              setNewEvent({ ...newEvent, start: new Date(), end: new Date() });
+              setModalOpen(true);
+            }}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
           >
-            <div className="flex items-center space-x-3">
-              <CalendarIcon className="w-8 h-8 text-green-600" />
-              <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setNewEvent({
-                  ...newEvent,
-                  start: new Date(),
-                  end: new Date(),
-                });
-                setModalOpen(true);
-              }}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-            >
-              <Plus size={20} className="mr-2" />
-              New Event
-            </motion.button>
-          </motion.div>
+            <Plus size={20} className="mr-2" />
+            New Event
+          </motion.button>
+        </motion.div>
 
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl shadow-xl border border-green-100"
+        >
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 700 }}
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            selectable
+            resizable
+            onEventDrop={moveEvent}
+            onEventResize={resizeEvent}
+            views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+            view={view}
+            date={date}
+            onView={(newView) => setView(newView)}
+            onNavigate={(newDate) => setDate(new Date(newDate))}
+            eventPropGetter={eventStyleGetter}
+            className="p-4"
+            draggableAccessor={() => true}
+          />
+        </motion.div>
+      </div>
+
+      <AnimatePresence>
+        {modalOpen && (
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl shadow-xl border border-green-100"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
           >
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 700 }}
-              onSelectEvent={(event) =>
-                alert(
-                  `${event.title}\n\nLocation: ${
-                    event.location || "Not specified"
-                  }\n\nDescription: ${
-                    event.description || "No description provided"
-                  }`
-                )
-              }
-              onSelectSlot={handleSelectSlot}
-              selectable
-              resizable
-              onEventDrop={moveEvent}
-              onEventResize={resizeEvent}
-              views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-              view={view}
-              date={date}
-              onView={(newView) => setView(newView)}
-              onNavigate={(newDate) => setDate(new Date(newDate))}
-              eventPropGetter={eventStyleGetter}
-              className="p-4"
-            />
-          </motion.div>
-        </div>
-
-        <AnimatePresence>
-          {modalOpen && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"
             >
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Add Event
-                  </h2>
-                  <motion.button
-                    whileHover={{ rotate: 90 }}
-                    onClick={() => setModalOpen(false)}
-                    className="text-gray-500 hover:text-gray-700"
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {editingEvent ? "Edit Event" : "Add Event"}
+                </h2>
+                <motion.button
+                  whileHover={{ rotate: 90 }}
+                  onClick={() => {
+                    setModalOpen(false);
+                    setEditingEvent(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
+                </motion.button>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="title"
                   >
-                    <X size={24} />
-                  </motion.button>
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={newEvent.title}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    required
+                  />
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="title"
-                    >
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={newEvent.title}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                      required
-                    />
-                  </div>
 
-                  <TimeInput
-                    label="Start Time"
-                    name="start"
-                    value={newEvent.start}
-                    onChange={handleDateTimeChange}
+                <TimeInput
+                  label="Start Time"
+                  name="start"
+                  value={newEvent.start}
+                  onChange={handleDateTimeChange}
+                />
+
+                <TimeInput
+                  label="End Time"
+                  name="end"
+                  value={newEvent.end}
+                  onChange={handleDateTimeChange}
+                />
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="description"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={newEvent.description}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    rows={3}
                   />
-
-                  <TimeInput
-                    label="End Time"
-                    name="end"
-                    value={newEvent.end}
-                    onChange={handleDateTimeChange}
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="location"
+                  >
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={newEvent.location}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                   />
-
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="description"
-                    >
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={newEvent.description}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="location"
-                    >
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={newEvent.location}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                      htmlFor="category"
-                    >
-                      Category
-                    </label>
-                    <select
-                      name="category"
-                      value={newEvent.category}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="work">Work</option>
-                      <option value="personal">Personal</option>
-                      <option value="family">Family</option>
-                      <option value="health">Health</option>
-                    </select>
-                  </div>
-                  <div className="flex justify-end space-x-3 mt-6">
+                </div>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="category"
+                  >
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={newEvent.category}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  >
+                    <option value="">Select Category</option>
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="family">Family</option>
+                    <option value="health">Health</option>
+                  </select>
+                </div>
+                <div className="flex justify-between space-x-3 mt-6">
+                  {editingEvent && (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       type="button"
-                      onClick={() => setModalOpen(false)}
+                      onClick={handleDeleteEvent}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-md flex items-center"
+                    >
+                      <Trash size={16} className="mr-2" />
+                      Delete
+                    </motion.button>
+                  )}
+                  <div className="flex space-x-3 ml-auto">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      type="button"
+                      onClick={() => {
+                        setModalOpen(false);
+                        setEditingEvent(null);
+                      }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Cancel
@@ -326,18 +371,28 @@ const CalendarPage = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-md flex items-center"
                     >
-                      Add Event
+                      {editingEvent ? (
+                        <>
+                          <Edit size={16} className="mr-2" />
+                          Update
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={16} className="mr-2" />
+                          Add
+                        </>
+                      )}
                     </motion.button>
                   </div>
-                </form>
-              </motion.div>
+                </div>
+              </form>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

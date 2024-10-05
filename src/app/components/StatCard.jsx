@@ -5,7 +5,7 @@ import React from "react";
 
 const StatCard = ({ content }) => {
   return (
-    <div className="grow px-12 py-12 w-full text-4xl text-center text-black rounded-3xl border-black border-solid bg-zinc-100 border-[3px] shadow-[14px_18px_6px_rgba(73,255,12,0.25)] max-md:px-5 max-md:mt-8">
+    <div className="grow px-6 pt-6 pb-5 w-11/12 text-3xl text-center text-black rounded-3xl border-black border-solid bg-zinc-100 border-[3px] shadow-[14px_18px_6px_rgba(73,255,12,0.25)] max-md:px-5 max-md:mt-8">
       {content}
     </div>
   );
