@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
+  username: { type: String, required: true},
   name: { type: String, required: true },
   reschedulable: { type: Boolean, required: true },
+  title: { type: String, required: true },
   start: {
     type: Date,
     required: true
@@ -21,12 +22,12 @@ const eventSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['work', 'personal', 'family', 'social', 'health', 'other'],
-    required: true
+    required: false
   },
   repeat: {
     type: String,
     enum: ['never', 'daily', 'weekly', 'monthly', 'yearly'],
-    required: true
+    required: false
   },
 }, {
   collection: 'events',

@@ -21,8 +21,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="hide-scrollbar">
-      {" "}
-      {/* Add hide-scrollbar to html */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
