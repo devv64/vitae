@@ -1,9 +1,18 @@
-"use client";
+"use client"; // Mark this component as a Client Component
 
-import Image from "next/image";
-import { useState, useEffect } from 'react';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter for redirecting
 
 export default function Home() {
+  const router = useRouter(); // Initialize the useRouter hook
+
+  useEffect(() => {
+    // Redirect to the /home route when the component mounts
+    router.push("/home");
+  }, [router]);
+
+  // Commenting out the JSX content to prevent it from being displayed
+  /*
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -118,4 +127,5 @@ export default function Home() {
       </footer>
     </div>
   );
+  */
 }

@@ -11,7 +11,6 @@ import MainContent from "../components/MainContent";
 const App = () => {
   return (
     <>
-      <Header />
       <MainContent />
       <style jsx>{`
         builder-component {
