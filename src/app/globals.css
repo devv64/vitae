@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* @import 'tui-calendar/dist/tui-calendar.min.css';
+@import 'tui-date-picker/dist/tui-date-picker.css';
+@import 'tui-time-picker/dist/tui-time-picker.css'; */
+
 
 :root {
   --background: #ffffff;
