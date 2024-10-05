@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const LoginPage = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,10 +25,10 @@ const LoginPage = () => {
 
       const data = await response.json();
       if (response.ok) {
-        // Store token in localStorage (or handle it however you prefer)
+
         localStorage.setItem("token", data.token);
-        // Redirect or update UI as needed
-        console.log("Login successful!");
+
+        router.push('/home');
       } else {
         throw new Error(data.message);
       }
@@ -36,53 +38,27 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left Side - Abstract Background */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
-        <motion.div
-          className="absolute inset-0 bg-green-300"
-          animate={{
-            backgroundPosition: [
-              "0% 50%",
-              "100% 50%",
-              "0% 50%",
-              "0% 50%",
-            ],
-          }}
-          transition={{
-            duration: 5,
-            ease: "linear",
-            repeat: Infinity,
-          }}
-        />
-        <motion.div
-          className="absolute inset-0 opacity-70"
-          style={{
-            background:
-              "url('https://source.unsplash.com/random/1600x900/?nature,abstract') no-repeat center center/cover",
-          }}
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 10, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
+    <div className="flex min-h-screen bg-gradient-to-b from-green-100 to-green-200">
+      {/* Left Side - Logo */}
+      <div className="hidden lg:flex flex-1 relative items-center justify-center">
+        <motion.img
+          src="https://cdn.builder.io/api/v1/image/assets/TEMP/a1f019f7c26ef2aaf00a3e32ef7f3eb972e91e2e9cdbe126d517a742ee5a8233?placeholderIfAbsent=true&apiKey=be7d969155c74017b8611192d433b602"
+          alt="Logo"
+          className="w-3/4 md:w-2/3 lg:w-1/2 h-auto"
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
         />
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+      <div className="flex-1 flex items-center justify-center p-8">
         <motion.div
           className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Logo Animation */}
-          <motion.img
-            src="/logo.png" // Update this path to your logo
-            alt="Logo"
-            className="mx-auto mb-6 h-12" // Adjust height as needed
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          />
           <h1 className="text-3xl font-bold text-center text-green-700 mb-6">Welcome Back!</h1>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           <form onSubmit={handleLogin}>

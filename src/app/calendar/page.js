@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -10,26 +10,58 @@ import { motion, AnimatePresence } from "framer-motion";
 const localizer = momentLocalizer(moment);
 
 const CalendarPage = () => {
-  const [events, setEvents] = useState([
-    {
-      id: 0,
-      title: "Board Meeting",
-      start: new Date(2024, 9, 10, 10, 0),
-      end: new Date(2024, 9, 10, 12, 0),
-      category: "work",
-      description: "",
-      location: "",
-    },
-    {
-      id: 1,
-      title: "Team Lunch",
-      start: new Date(2024, 9, 11, 12, 0),
-      end: new Date(2024, 9, 11, 13, 0),
-      category: "personal",
-      description: "",
-      location: "",
-    },
-  ]);
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch("/api/events");
+        if (!response.ok) {
+          throw new Error("Failed to fetch events");
+        }
+        const data = await response.json();
+
+        // Convert the event start and end dates to JS Date objects
+        const formattedEvents = data.map((event) => ({
+          ...event,
+          start: new Date(event.start), // Ensure start is a JS Date object
+          end: new Date(event.end), // Ensure end is a JS Date object
+        }));
+
+        // Check if there are no events
+        if (formattedEvents.length === 0) {
+          alert("No existing events found.");
+        } else {
+          setEvents(formattedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // const [events, setEvents] = useState([
+  //   {
+  //     id: 0,
+  //     title: "Board Meeting",
+  //     start: new Date(2024, 5, 10, 10, 0),
+  //     end: new Date(2024, 5, 10, 12, 0),
+  //     category: "work",
+  //     description: "",
+  //     location: "",
+  //   },
+  //   {
+  //     id: 1,
+  //     title: "Team Lunch",
+  //     start: new Date(2024, 5, 11, 12, 0),
+  //     end: new Date(2024, 5, 11, 13, 0),
+  //     category: "personal",
+  //     description: "",
+  //     location: "",
+  //   },
+  // ]);
 
   const [view, setView] = useState(Views.WEEK);
   const [date, setDate] = useState(new Date());
@@ -50,6 +82,10 @@ const CalendarPage = () => {
       ...newEvent,
       start,
       end,
+    setNewEvent({
+      ...newEvent,
+      start,
+      end,
     });
     setModalOpen(true);
   };
@@ -60,9 +96,25 @@ const CalendarPage = () => {
     setModalOpen(true);
   };
 
+  const categoryTypeMapping = {
+    work: "work",
+    personal: "personal",
+    family: "family",
+    social: "social",
+    health: "health",
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEvent({ ...newEvent, [name]: value });
+    setNewEvent((prevEvent) => {
+      const updatedEvent = { ...prevEvent, [name]: value };
+
+      if (name === "category") {
+        updatedEvent.type = categoryTypeMapping[value] || "other";
+      }
+
+      return updatedEvent;
+    });
   };
 
   const handleDateTimeChange = (e) => {
@@ -74,42 +126,29 @@ const CalendarPage = () => {
     setNewEvent({ ...newEvent, [name]: newDate });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (editingEvent) {
-      setEvents((prev) =>
-        prev.map((event) =>
-          event.id === editingEvent.id ? { ...newEvent } : event
-        )
-      );
+      setEvents(prev => prev.map(event => 
+        event.id === editingEvent.id ? { ...newEvent } : event
+      ));
     } else {
-      setEvents((prev) => [...prev, { ...newEvent, id: prev.length }]);
+      setEvents(prev => [
+        ...prev,
+        { ...newEvent, id: prev.length }
+      ]);
     }
     setModalOpen(false);
     setEditingEvent(null);
-    setNewEvent({
-      title: "",
-      start: new Date(),
-      end: new Date(),
-      description: "",
-      location: "",
-      category: "",
-    });
+    setNewEvent({ title: '', start: new Date(), end: new Date(), description: '', location: '', category: '' });
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (editingEvent) {
-      setEvents((prev) => prev.filter((event) => event.id !== editingEvent.id));
+      setEvents(prev => prev.filter(event => event.id !== editingEvent.id));
       setModalOpen(false);
       setEditingEvent(null);
-      setNewEvent({
-        title: "",
-        start: new Date(),
-        end: new Date(),
-        description: "",
-        location: "",
-        category: "",
-      });
+      setNewEvent({ title: '', start: new Date(), end: new Date(), description: '', location: '', category: '' });
     }
   };
 

@@ -1,17 +1,12 @@
-import jwt from 'jsonwebtoken';
-
-export const authMiddleware = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied!' });
-  }
-
-  try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (error) {
-    return res.status(400).json({ message: 'Invalid token!' });
-  }
-};
+import { NextResponse } from 'next/server'
+ 
+// This function can be marked `async` if using `await` inside
+export function middleware(request) {
+    console.log('middleware')
+  return NextResponse.redirect(new URL('/home', request.url))
+}
+ 
+// See "Matching Paths" below to learn more
+export const config = {
+  matcher: '/*',
+}
