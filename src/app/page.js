@@ -1,6 +1,21 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    async function fetchMongoTest() {
+      const response = await fetch('/api/mongoTest');
+      const data = await response.json();
+      setMessage(data.message);
+    }
+
+    fetchMongoTest();
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -22,6 +37,11 @@ export default function Home() {
           </li>
           <li>Save and see your changes instantly.</li>
         </ol>
+
+        <div className="text-center mt-4">
+          <h2>MongoDB Connection Status:</h2>
+          <p>{message}</p>
+        </div>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
