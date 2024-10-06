@@ -34,7 +34,6 @@ const Header = () => {
         {/* Calendar Button with Link */}
         <Link href="/calendar" className="overflow-hidden gap-2 self-stretch px-2 py-2 bg-green-300 rounded-lg border border-green-300 border-solid min-h-[66px] max-md:text-4xl">
             Calendar
-          
         </Link>
       </nav>
     </header>

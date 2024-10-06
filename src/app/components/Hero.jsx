@@ -31,10 +31,10 @@ const Hero = () => {
         </div>
       </div>
       <a
-        href="#"
+        href="/login"
         className="overflow-hidden gap-2 self-start px-3 py-1 mt-3.5 ml-3.5 text-5xl tracking-normal whitespace-nowrap bg-green-300 rounded-lg border border-green-300 border-solid leading-[52px] min-h-[59px] text-[color:var(--sds-color-text-brand-default)] max-md:ml-2.5 max-md:text-4xl"
       >
-        Register
+        Login
       </a>
     </section>
   );

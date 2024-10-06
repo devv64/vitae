@@ -22,7 +22,7 @@ const FeatureSection = ({
           <br />
           <br />
         </h2>
-        <p className="mt-7 text-4xl max-md:max-w-full">{description}</p>
+        <p className="mt-7 text-3xl max-md:max-w-80%">{description}</p>
       </div>
     </div>
   );
