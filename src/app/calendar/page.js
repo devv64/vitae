@@ -82,10 +82,6 @@ const CalendarPage = () => {
       ...newEvent,
       start,
       end,
-    setNewEvent({
-      ...newEvent,
-      start,
-      end,
     });
     setModalOpen(true);
   };
@@ -128,27 +124,95 @@ const CalendarPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingEvent) {
-      setEvents(prev => prev.map(event => 
-        event.id === editingEvent.id ? { ...newEvent } : event
-      ));
-    } else {
-      setEvents(prev => [
-        ...prev,
-        { ...newEvent, id: prev.length }
-      ]);
+
+    const eventToSubmit = {
+      ...newEvent,
+      repeat: "never", // Example: Adjust based on user input
+      reschedulable: true, // or based on your app logic
+      name: newEvent.title, // Assuming name is the title of the event
+      username: "dev", // Set this based on the logged-in user
+    };
+
+    try {
+      if (editingEvent) {
+        const response = await fetch(`/api/events/${editingEvent.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(eventToSubmit), // Send the complete object
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update event");
+        }
+
+        const updatedEvent = await response.json();
+        setEvents((prev) =>
+          prev.map((event) =>
+            event.id === updatedEvent.id ? updatedEvent : event
+          )
+        );
+      } else {
+        const response = await fetch("/api/events", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eventToSubmit }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create event");
+        }
+
+        const createdEvent = await response.json();
+        setEvents((prev) => [...prev, createdEvent]);
+      }
+    } catch (error) {
+      console.error("Error submitting event:", error);
+    } finally {
+      setModalOpen(false);
+      setEditingEvent(null);
+      setNewEvent({
+        title: "",
+        start: new Date(),
+        end: new Date(),
+        description: "",
+        location: "",
+        category: "",
+      });
     }
-    setModalOpen(false);
-    setEditingEvent(null);
-    setNewEvent({ title: '', start: new Date(), end: new Date(), description: '', location: '', category: '' });
   };
 
   const handleDeleteEvent = async () => {
     if (editingEvent) {
-      setEvents(prev => prev.filter(event => event.id !== editingEvent.id));
-      setModalOpen(false);
-      setEditingEvent(null);
-      setNewEvent({ title: '', start: new Date(), end: new Date(), description: '', location: '', category: '' });
+      try {
+        const response = await fetch(`/api/events/${editingEvent.id}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete event");
+        }
+
+        setEvents((prev) =>
+          prev.filter((event) => event.id !== editingEvent.id)
+        );
+      } catch (error) {
+        console.error("Error deleting event:", error);
+      } finally {
+        setModalOpen(false);
+        setEditingEvent(null);
+        setNewEvent({
+          title: "",
+          start: new Date(),
+          end: new Date(),
+          description: "",
+          location: "",
+          category: "",
+        });
+      }
     }
   };
 
