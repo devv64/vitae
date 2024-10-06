@@ -32,8 +32,6 @@ export async function PUT(req, { params }) {
     }
 }
 
-import Goals from '../../../../models/Goals';
-
 export async function DELETE(req, { params }) {
     const { id } = params;
     try {
