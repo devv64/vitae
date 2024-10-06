@@ -8,7 +8,7 @@ import FeatureSection from "./FeatureSection";
 
 const MainContent = () => {
   return (
-    <main className="flex overflow-hidden flex-col pb-60 bg-white max-md:pb-24 max-w-[70%] mx-auto">
+    <main className="flex overflow-hidden flex-col pb-60 bg-white max-md:pb-24 max-w-[80%] mx-auto">
       <Hero />
       <StatSection />
       <FeatureSection

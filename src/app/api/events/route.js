@@ -8,7 +8,6 @@ export async function GET(req) {
         const events = await Event.find();
         return new Response(JSON.stringify(events), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } catch (error) {
-        console.error('Error retrieving events:', error);
         return new Response(JSON.stringify({ message: "Error retrieving events", error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
@@ -16,12 +15,11 @@ export async function GET(req) {
 export async function POST(req) {
     try {
         let eventData = await req.json();
-        eventData = eventData.eventToSubmit;
 
         console.log('eventData:', eventData);
+
         // Validate eventData before creating a new event
         if (!eventData.title || !eventData.start || !eventData.end) {
-            console.error('Missing required fields');
             return new Response(JSON.stringify({ message: "Missing required fields" }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
 
@@ -31,10 +29,8 @@ export async function POST(req) {
     } catch (error) {
         console.error('Error creating event:', error);
         if (error.name === 'ValidationError') {
-            console.error('Validation error:', error);
             return new Response(JSON.stringify({ message: error.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
         }
-        console.error('!');
         return new Response(JSON.stringify({ message: "Error creating event", error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }

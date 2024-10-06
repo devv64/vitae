@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema({
-  username: { type: String, required: true},
-  name: { type: String, required: true },
+  username: { type: String },
   reschedulable: { type: Boolean, required: true },
   title: { type: String, required: true },
   start: {

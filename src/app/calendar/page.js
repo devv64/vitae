@@ -11,6 +11,20 @@ const localizer = momentLocalizer(moment);
 
 const CalendarPage = () => {
   const [events, setEvents] = useState([]);
+  const [view, setView] = useState(Views.WEEK);
+  const [date, setDate] = useState(new Date());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [newEvent, setNewEvent] = useState({
+    username: "dev",
+    title: "",
+    start: new Date(),
+    end: new Date(),
+    reschedulable: true,
+    intensity: 1,
+    type: "other",
+    repeat: "never",
+  });
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -21,19 +35,13 @@ const CalendarPage = () => {
         }
         const data = await response.json();
 
-        // Convert the event start and end dates to JS Date objects
         const formattedEvents = data.map((event) => ({
           ...event,
-          start: new Date(event.start), // Ensure start is a JS Date object
-          end: new Date(event.end), // Ensure end is a JS Date object
+          start: new Date(event.start),
+          end: new Date(event.end),
         }));
 
-        // Check if there are no events
-        if (formattedEvents.length === 0) {
-          alert("No existing events found.");
-        } else {
-          setEvents(formattedEvents);
-        }
+        setEvents(formattedEvents);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
@@ -42,84 +50,41 @@ const CalendarPage = () => {
     fetchEvents();
   }, []);
 
-  // const [events, setEvents] = useState([
-  //   {
-  //     id: 0,
-  //     title: "Board Meeting",
-  //     start: new Date(2024, 5, 10, 10, 0),
-  //     end: new Date(2024, 5, 10, 12, 0),
-  //     category: "work",
-  //     description: "",
-  //     location: "",
-  //   },
-  //   {
-  //     id: 1,
-  //     title: "Team Lunch",
-  //     start: new Date(2024, 5, 11, 12, 0),
-  //     end: new Date(2024, 5, 11, 13, 0),
-  //     category: "personal",
-  //     description: "",
-  //     location: "",
-  //   },
-  // ]);
-
-  const [view, setView] = useState(Views.WEEK);
-  const [date, setDate] = useState(new Date());
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState(null);
-  const [newEvent, setNewEvent] = useState({
-    title: "",
-    start: new Date(),
-    end: new Date(),
-    description: "",
-    location: "",
-    category: "",
-  });
-
   const handleSelectSlot = ({ start, end }) => {
     setEditingEvent(null);
     setNewEvent({
       ...newEvent,
-      start,
-      end,
+      start: new Date(start),
+      end: new Date(end),
     });
     setModalOpen(true);
   };
 
   const handleSelectEvent = (event) => {
     setEditingEvent(event);
-    setNewEvent(event);
+    setNewEvent({
+      ...event,
+      start: new Date(event.start),
+      end: new Date(event.end),
+    });
     setModalOpen(true);
-  };
-
-  const categoryTypeMapping = {
-    work: "work",
-    personal: "personal",
-    family: "family",
-    social: "social",
-    health: "health",
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEvent((prevEvent) => {
-      const updatedEvent = { ...prevEvent, [name]: value };
-
-      if (name === "category") {
-        updatedEvent.type = categoryTypeMapping[value] || "other";
-      }
-
-      return updatedEvent;
-    });
+    setNewEvent(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleDateTimeChange = (e) => {
     const { name, value } = e.target;
-    const [datePart, timePart] = value.split("T");
-    const newDate = new Date(datePart);
-    const [hours, minutes] = timePart.split(":");
-    newDate.setHours(parseInt(hours), parseInt(minutes));
-    setNewEvent({ ...newEvent, [name]: newDate });
+    const newDate = new Date(value);
+    setNewEvent(prev => ({
+      ...prev,
+      [name]: newDate
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -127,30 +92,36 @@ const CalendarPage = () => {
 
     const eventToSubmit = {
       ...newEvent,
-      repeat: "never", // Example: Adjust based on user input
-      reschedulable: true, // or based on your app logic
-      name: newEvent.title, // Assuming name is the title of the event
-      username: "dev", // Set this based on the logged-in user
+      start: new Date(newEvent.start),
+      end: new Date(newEvent.end),
     };
+
+    console.log("Submitting event:", eventToSubmit);
 
     try {
       if (editingEvent) {
-        const response = await fetch(`/api/events/${editingEvent.id}`, {
+        const response = await fetch(`/api/events/${editingEvent._id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(eventToSubmit), // Send the complete object
+          body: JSON.stringify(eventToSubmit),
         });
 
         if (!response.ok) {
           throw new Error("Failed to update event");
         }
 
-        const updatedEvent = await response.json();
-        setEvents((prev) =>
-          prev.map((event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
+        const updatedEventData = await response.json();
+        const updatedEvent = {
+          ...updatedEventData,
+          start: new Date(updatedEventData.start),
+          end: new Date(updatedEventData.end),
+        };
+
+        setEvents(prev =>
+          prev.map(event =>
+            event._id === updatedEvent._id ? updatedEvent : event
           )
         );
       } else {
@@ -159,15 +130,21 @@ const CalendarPage = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ eventToSubmit }),
+          body: JSON.stringify(eventToSubmit),
         });
 
         if (!response.ok) {
           throw new Error("Failed to create event");
         }
 
-        const createdEvent = await response.json();
-        setEvents((prev) => [...prev, createdEvent]);
+        const createdEventData = await response.json();
+        const createdEvent = {
+          ...createdEventData,
+          start: new Date(createdEventData.start),
+          end: new Date(createdEventData.end),
+        };
+
+        setEvents(prev => [...prev, createdEvent]);
       }
     } catch (error) {
       console.error("Error submitting event:", error);
@@ -175,20 +152,23 @@ const CalendarPage = () => {
       setModalOpen(false);
       setEditingEvent(null);
       setNewEvent({
+        username: "dev",
         title: "",
         start: new Date(),
         end: new Date(),
-        description: "",
-        location: "",
-        category: "",
+        reschedulable: true,
+        intensity: 1,
+        type: "other",
+        repeat: "never",
       });
     }
   };
 
   const handleDeleteEvent = async () => {
     if (editingEvent) {
+      console.log("Deleting event:", editingEvent);
       try {
-        const response = await fetch(`/api/events/${editingEvent.id}`, {
+        const response = await fetch(`/api/events/${editingEvent._id}`, {
           method: "DELETE",
         });
 
@@ -196,8 +176,8 @@ const CalendarPage = () => {
           throw new Error("Failed to delete event");
         }
 
-        setEvents((prev) =>
-          prev.filter((event) => event.id !== editingEvent.id)
+        setEvents(prev =>
+          prev.filter((event) => event._id !== editingEvent._id)
         );
       } catch (error) {
         console.error("Error deleting event:", error);
@@ -205,19 +185,21 @@ const CalendarPage = () => {
         setModalOpen(false);
         setEditingEvent(null);
         setNewEvent({
+          username: "dev",
           title: "",
           start: new Date(),
           end: new Date(),
-          description: "",
-          location: "",
-          category: "",
+          reschedulable: true,
+          intensity: 1,
+          type: "other",
+          repeat: "never",
         });
       }
     }
   };
 
   const moveEvent = ({ event, start, end }) => {
-    setEvents((prev) => {
+    setEvents(prev => {
       const existing = prev.find((ev) => ev.id === event.id) ?? {};
       const filtered = prev.filter((ev) => ev.id !== event.id);
       return [...filtered, { ...existing, start, end }];
@@ -225,27 +207,67 @@ const CalendarPage = () => {
   };
 
   const resizeEvent = ({ event, start, end }) => {
-    setEvents((prev) => {
-      const existing = prev.find((ev) => ev.id === event.id) ?? {};
-      const filtered = prev.filter((ev) => ev.id !== event.id);
+    setEvents(prev => {
+      const existing = prev.find((ev) => ev._id === event._id) ?? {};
+      const filtered = prev.filter((ev) => ev._id !== event._id);
       return [...filtered, { ...existing, start, end }];
     });
   };
 
+  // const eventStyleGetter = (event) => {
+  //   let baseColor;
+    
+  //   // Determine color based on reschedulability
+  //   if (event.reschedulable) {
+  //     baseColor = 'bg-green-400'; // Light green for reschedulable events
+  //   } else {
+  //     baseColor = 'bg-green-700'; // Dark green for non-reschedulable events
+  //   }
+
+  //   // Type-based border accents
+  //   const typeAccents = {
+  //     work: 'border-blue-600',
+  //     personal: 'border-purple-600',
+  //     family: 'border-yellow-600',
+  //     social: 'border-orange-600',
+  //     health: 'border-red-600',
+  //     other: 'border-gray-600',
+  //   };
+
+  //   const borderAccent = typeAccents[event.type] || 'border-gray-600';
+
+  //   return {
+  //     className: `${baseColor} ${borderAccent} text-white rounded-lg border-l-4 border-red-600 cursor-pointer transition-all hover:opacity-90`,
+  //     style: {
+  //       fontSize: '0.85em',
+  //     }
+  //   };
+  // };
+
   const eventStyleGetter = (event) => {
-    const categoryColors = {
-      work: "bg-green-600",
-      personal: "bg-green-400",
-      family: "bg-emerald-500",
-      health: "bg-teal-500",
-    };
+    console.log("Styling event:", event); // Log to see if it's called
 
     return {
-      className: `${
-        categoryColors[event.category] || "bg-green-500"
-      } text-white rounded-lg border-none cursor-pointer`,
+      className: 'bg-red-500', // Temporary style to test
+      style: {
+        fontSize: '0.85em',
+      },
     };
   };
+  
+
+  const CalendarLegend = () => (
+    <div className="flex items-center space-x-4 text-sm mb-4">
+      <div className="flex items-center">
+        <div className="w-4 h-4 bg-green-400 rounded mr-2"></div>
+        <span>TASK (RESCHEDULABLE)</span>
+      </div>
+      <div className="flex items-center">
+        <div className="w-4 h-4 bg-green-700 rounded mr-2"></div>
+        <span>EVENT (FIXED)</span>
+      </div>
+    </div>
+  );
 
   const TimeInput = ({ label, name, value, onChange }) => (
     <div className="relative">
@@ -271,6 +293,85 @@ const CalendarPage = () => {
     </div>
   );
 
+  const handleSubmitOptimize = async (e) => {
+    // e.preventDefault();
+
+    console.log("Optimizing schedule");
+    console.log("Events:", events);
+    let tasks = events.filter((event) => event.reschedulable);
+    tasks = tasks.map((task) => ({
+      priority: task.intensity,
+      duration: moment(task.end).diff(moment(task.start), "minutes") / 60,
+      name: task.title,
+    }));
+    let pureEvents = events.filter((event) => !event.reschedulable);
+    console.log("PURERRE EVENTS:", pureEvents);
+    pureEvents = pureEvents.map((event) => ({
+      start: event.start,
+      end: event.end,
+      title: event.title,
+    }));
+
+    console.log("Tasks:", tasks);
+    console.log("Pure events:", pureEvents);
+
+    const response = await fetch("/api/schedule", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        tasks,
+        events: pureEvents,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to optimize schedule");
+    }
+
+    const data = await response.json();
+    console.log("Optimized schedule:", data);
+
+    const updatedEvents = events.map(event => {
+      const newTime = data.find(optEvent => optEvent.title === event.title);
+      if (newTime) {
+        return {
+          ...event,
+          start: new Date(newTime.start),
+          end: new Date(newTime.end),
+        };
+      }
+      return event;
+    });
+
+    console.log("Updated events:", updatedEvents);
+    setEvents(updatedEvents);
+
+    await Promise.all(updatedEvents.map(async (event) => {
+      const response = await fetch(`/api/events/${event._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          reschedulable: event.reschedulable,
+          intensity: event.intensity,
+          type: event.type,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to update event ${event.title}`);
+      }
+    }));
+  }
+
+  
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -288,27 +389,47 @@ const CalendarPage = () => {
             <CalendarIcon className="w-8 h-8 text-green-600" />
             <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setEditingEvent(null);
-              setNewEvent({ ...newEvent, start: new Date(), end: new Date() });
-              setModalOpen(true);
-            }}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-          >
-            <Plus size={20} className="mr-2" />
-            New Event
-          </motion.button>
+          <div className="flex space-x-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSubmitOptimize}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+            >
+              Optimize
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setEditingEvent(null);
+                setNewEvent({
+                  username: "dev",
+                  title: "",
+                  start: new Date(),
+                  end: new Date(),
+                  reschedulable: true,
+                  intensity: 1,
+                  type: "other",
+                  repeat: "never",
+                });
+                setModalOpen(true);
+              }}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+            >
+              <Plus size={20} className="mr-2" />
+              New Event
+            </motion.button>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-xl border border-green-100"
+          className="bg-white rounded-xl shadow-xl border border-green-100 p-4"
         >
+          <CalendarLegend />
           <Calendar
             localizer={localizer}
             events={events}
@@ -325,10 +446,8 @@ const CalendarPage = () => {
             view={view}
             date={date}
             onView={(newView) => setView(newView)}
-            onNavigate={(newDate) => setDate(new Date(newDate))}
+            onNavigate={(newDate) => setDate(newDate)}
             eventPropGetter={eventStyleGetter}
-            className="p-4"
-            draggableAccessor={() => true}
           />
         </motion.div>
       </div>
@@ -364,10 +483,7 @@ const CalendarPage = () => {
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="title"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="title">
                     Title
                   </label>
                   <input
@@ -380,20 +496,99 @@ const CalendarPage = () => {
                   />
                 </div>
 
-                <TimeInput
-                  label="Start Time"
-                  name="start"
-                  value={newEvent.start}
-                  onChange={handleDateTimeChange}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="start">
+                    Start Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="start"
+                    value={moment(newEvent.start).format("YYYY-MM-DDTHH:mm")}
+                    onChange={handleDateTimeChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    required
+                  />
+                </div>
 
-                <TimeInput
-                  label="End Time"
-                  name="end"
-                  value={newEvent.end}
-                  onChange={handleDateTimeChange}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="end">
+                    End Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="end"
+                    value={moment(newEvent.end).format("YYYY-MM-DDTHH:mm")}
+                    onChange={handleDateTimeChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    required
+                  />
+                </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="type">
+                    Type
+                  </label>
+                  <select
+                    name="type"
+                    value={newEvent.type}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  >
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="family">Family</option>
+                    <option value="social">Social</option>
+                    <option value="health">Health</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="intensity">
+                    Intensity (1-5)
+                  </label>
+                  <input
+                    type="number"
+                    name="intensity"
+                    min="1"
+                    max="5"
+                    value={newEvent.intensity}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="repeat">
+                    Repeat
+                  </label>
+                  <select
+                    name="repeat"
+                    value={newEvent.repeat}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                  >
+                    <option value="never">Never</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="reschedulable"
+                    name="reschedulable"
+                    checked={newEvent.reschedulable}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, reschedulable: e.target.checked }))}
+                    className="mr-2"
+                  />
+                  <label className="text-sm font-medium text-gray-700" htmlFor="reschedulable">
+                    Reschedulable
+                  </label>
+                </div>
                 <div>
                   <label
                     className="block text-sm font-medium text-gray-700 mb-1"
@@ -408,41 +603,6 @@ const CalendarPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                     rows={3}
                   />
-                </div>
-                <div>
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="location"
-                  >
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={newEvent.location}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="category"
-                  >
-                    Category
-                  </label>
-                  <select
-                    name="category"
-                    value={newEvent.category}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                  >
-                    <option value="">Select Category</option>
-                    <option value="work">Work</option>
-                    <option value="personal">Personal</option>
-                    <option value="family">Family</option>
-                    <option value="health">Health</option>
-                  </select>
                 </div>
                 <div className="flex justify-between space-x-3 mt-6">
                   {editingEvent && (

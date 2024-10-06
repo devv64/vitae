@@ -107,8 +107,8 @@ const LoginPage = () => {
           </form>
           <p className="text-center text-sm text-gray-500 mt-4">
             Don't have an account?{" "}
-            <a href="/signup" className="text-green-600 hover:text-green-700 font-semibold">
-              Sign up
+            <a href="/register" className="text-green-600 hover:text-green-700 font-semibold">
+              Register
             </a>
           </p>
         </motion.div>
