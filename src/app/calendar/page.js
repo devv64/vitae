@@ -6,10 +6,12 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Plus, X, CalendarIcon, Clock, Edit, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const localizer = momentLocalizer(moment);
 
 const CalendarPage = () => {
+  const router = useRouter();
   const [events, setEvents] = useState([]);
   const [view, setView] = useState(Views.WEEK);
   const [date, setDate] = useState(new Date());
@@ -25,6 +27,10 @@ const CalendarPage = () => {
     type: "other",
     repeat: "never",
   });
+
+  const handleNavigateToPreferences = () => {
+    router.push("/preferences");
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -72,18 +78,18 @@ const CalendarPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEvent(prev => ({
+    setNewEvent((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleDateTimeChange = (e) => {
     const { name, value } = e.target;
     const newDate = new Date(value);
-    setNewEvent(prev => ({
+    setNewEvent((prev) => ({
       ...prev,
-      [name]: newDate
+      [name]: newDate,
     }));
   };
 
@@ -119,8 +125,8 @@ const CalendarPage = () => {
           end: new Date(updatedEventData.end),
         };
 
-        setEvents(prev =>
-          prev.map(event =>
+        setEvents((prev) =>
+          prev.map((event) =>
             event._id === updatedEvent._id ? updatedEvent : event
           )
         );
@@ -144,7 +150,7 @@ const CalendarPage = () => {
           end: new Date(createdEventData.end),
         };
 
-        setEvents(prev => [...prev, createdEvent]);
+        setEvents((prev) => [...prev, createdEvent]);
       }
     } catch (error) {
       console.error("Error submitting event:", error);
@@ -176,7 +182,7 @@ const CalendarPage = () => {
           throw new Error("Failed to delete event");
         }
 
-        setEvents(prev =>
+        setEvents((prev) =>
           prev.filter((event) => event._id !== editingEvent._id)
         );
       } catch (error) {
@@ -199,7 +205,7 @@ const CalendarPage = () => {
   };
 
   const moveEvent = ({ event, start, end }) => {
-    setEvents(prev => {
+    setEvents((prev) => {
       const existing = prev.find((ev) => ev.id === event.id) ?? {};
       const filtered = prev.filter((ev) => ev.id !== event.id);
       return [...filtered, { ...existing, start, end }];
@@ -207,7 +213,7 @@ const CalendarPage = () => {
   };
 
   const resizeEvent = ({ event, start, end }) => {
-    setEvents(prev => {
+    setEvents((prev) => {
       const existing = prev.find((ev) => ev._id === event._id) ?? {};
       const filtered = prev.filter((ev) => ev._id !== event._id);
       return [...filtered, { ...existing, start, end }];
@@ -216,7 +222,7 @@ const CalendarPage = () => {
 
   // const eventStyleGetter = (event) => {
   //   let baseColor;
-    
+
   //   // Determine color based on reschedulability
   //   if (event.reschedulable) {
   //     baseColor = 'bg-green-400'; // Light green for reschedulable events
@@ -248,13 +254,12 @@ const CalendarPage = () => {
     console.log("Styling event:", event); // Log to see if it's called
 
     return {
-      className: 'bg-red-500', // Temporary style to test
+      className: "bg-red-500", // Temporary style to test
       style: {
-        fontSize: '0.85em',
+        fontSize: "0.85em",
       },
     };
   };
-  
 
   const CalendarLegend = () => (
     <div className="flex items-center space-x-4 text-sm mb-4">
@@ -333,8 +338,8 @@ const CalendarPage = () => {
     const data = await response.json();
     console.log("Optimized schedule:", data);
 
-    const updatedEvents = events.map(event => {
-      const newTime = data.find(optEvent => optEvent.title === event.title);
+    const updatedEvents = events.map((event) => {
+      const newTime = data.find((optEvent) => optEvent.title === event.title);
       if (newTime) {
         return {
           ...event,
@@ -348,29 +353,29 @@ const CalendarPage = () => {
     console.log("Updated events:", updatedEvents);
     setEvents(updatedEvents);
 
-    await Promise.all(updatedEvents.map(async (event) => {
-      const response = await fetch(`/api/events/${event._id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: event.title,
-          start: event.start,
-          end: event.end,
-          reschedulable: event.reschedulable,
-          intensity: event.intensity,
-          type: event.type,
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to update event ${event.title}`);
-      }
-    }));
-  }
+    await Promise.all(
+      updatedEvents.map(async (event) => {
+        const response = await fetch(`/api/events/${event._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            reschedulable: event.reschedulable,
+            intensity: event.intensity,
+            type: event.type,
+          }),
+        });
 
-  
+        if (!response.ok) {
+          throw new Error(`Failed to update event ${event.title}`);
+        }
+      })
+    );
+  };
 
   return (
     <motion.div
@@ -390,6 +395,15 @@ const CalendarPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           </div>
           <div className="flex space-x-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNavigateToPreferences}
+              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+            >
+              Go to Preferences
+            </motion.button>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -483,7 +497,10 @@ const CalendarPage = () => {
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="title">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="title"
+                  >
                     Title
                   </label>
                   <input
@@ -497,7 +514,10 @@ const CalendarPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="start">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="start"
+                  >
                     Start Time
                   </label>
                   <input
@@ -511,7 +531,10 @@ const CalendarPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="end">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="end"
+                  >
                     End Time
                   </label>
                   <input
@@ -525,7 +548,10 @@ const CalendarPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="type">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="type"
+                  >
                     Type
                   </label>
                   <select
@@ -544,7 +570,10 @@ const CalendarPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="intensity">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="intensity"
+                  >
                     Intensity (1-5)
                   </label>
                   <input
@@ -559,7 +588,10 @@ const CalendarPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="repeat">
+                  <label
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    htmlFor="repeat"
+                  >
                     Repeat
                   </label>
                   <select
@@ -582,10 +614,18 @@ const CalendarPage = () => {
                     id="reschedulable"
                     name="reschedulable"
                     checked={newEvent.reschedulable}
-                    onChange={(e) => setNewEvent(prev => ({ ...prev, reschedulable: e.target.checked }))}
+                    onChange={(e) =>
+                      setNewEvent((prev) => ({
+                        ...prev,
+                        reschedulable: e.target.checked,
+                      }))
+                    }
                     className="mr-2"
                   />
-                  <label className="text-sm font-medium text-gray-700" htmlFor="reschedulable">
+                  <label
+                    className="text-sm font-medium text-gray-700"
+                    htmlFor="reschedulable"
+                  >
                     Reschedulable
                   </label>
                 </div>

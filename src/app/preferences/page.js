@@ -7,22 +7,27 @@ import {
   Typography,
   Button,
   IconButton,
+  Box,
+  Divider,
 } from "@mui/material";
-import { AddCircle, Delete } from "@mui/icons-material"; // Make sure MUI Icons are installed
+import { AddCircle, Delete } from "@mui/icons-material"; // MUI Icons
 import Header from "../components/Header"; // Import the updated Header component
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-// Custom MUI theme for the green color scheme
+// Custom MUI theme for a consistent green color scheme
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#86efac", // Green color (bg-green-300)
+      main: "#4caf50", // Consistent green color
+    },
+    secondary: {
+      main: "#d32f2f", // Red color for delete button
     },
   },
 });
 
 export default function PreferencesPage() {
-  // Form state for general preferences
+  // State for general preferences
   const [preferences, setPreferences] = useState({
     wakeup_time: "07:00",
     sleep_time: "22:00",
@@ -32,7 +37,7 @@ export default function PreferencesPage() {
     mental_health: 3,
   });
 
-  // Form state for goals
+  // State for goals
   const [goals, setGoals] = useState([
     { title: "", goal_date: "", priority: 3, practice_time: "" },
   ]);
@@ -93,18 +98,29 @@ export default function PreferencesPage() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-gradient-to-r from-green-100 to-green-300 min-h-screen">
-        <div className="pt-10">
-          <div className="max-w-4xl mx-auto  p-8 bg-white shadow-lg rounded-lg">
-            {/* Added margin above the block and widened the container */}
-            <Typography
-              variant="h5"
-              className="text-center mb-6 font-bold text-black"
-            >
-              Preferences
-            </Typography>
+      <Box
+        sx={{
+          backgroundColor: "green.50",
+          minHeight: "100vh",
+          py: 8,
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: "900px",
+            mx: "auto",
+            backgroundColor: "white",
+            p: 5,
+            borderRadius: 2,
+            boxShadow: 3,
+          }}
+        >
+          <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
+            Set Your Preferences
+          </Typography>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
+          <form onSubmit={handleSubmit}>
+            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
               {/* Wakeup Time */}
               <TextField
                 label="Wakeup Time"
@@ -112,8 +128,8 @@ export default function PreferencesPage() {
                 type="time"
                 value={preferences.wakeup_time}
                 onChange={handleInputChange}
-                className="col-span-1 mb-4"
                 InputLabelProps={{ shrink: true }}
+                sx={{ gridColumn: "1 / 2" }}
               />
 
               {/* Sleep Time */}
@@ -123,14 +139,14 @@ export default function PreferencesPage() {
                 type="time"
                 value={preferences.sleep_time}
                 onChange={handleInputChange}
-                className="col-span-1 mb-4"
                 InputLabelProps={{ shrink: true }}
+                sx={{ gridColumn: "2 / 3" }}
               />
 
               {/* Early Bird Preference Slider */}
-              <div className="col-span-1">
-                <Typography className="mb-2 font-bold text-black">
-                  Early Bird (1 to 5):
+              <Box sx={{ gridColumn: "1 / 2" }}>
+                <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Early Bird Preference
                 </Typography>
                 <Slider
                   value={preferences.early_bird}
@@ -138,15 +154,14 @@ export default function PreferencesPage() {
                   min={1}
                   max={5}
                   valueLabelDisplay="auto"
-                  className="mb-6"
                   color="primary"
                 />
-              </div>
+              </Box>
 
               {/* Night Owl Preference Slider */}
-              <div className="col-span-1">
-                <Typography className="mb-2 font-bold text-black">
-                  Night Owl (1 to 5):
+              <Box sx={{ gridColumn: "2 / 3" }}>
+                <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Night Owl Preference
                 </Typography>
                 <Slider
                   value={preferences.night_owl}
@@ -154,15 +169,14 @@ export default function PreferencesPage() {
                   min={1}
                   max={5}
                   valueLabelDisplay="auto"
-                  className="mb-6"
                   color="primary"
                 />
-              </div>
+              </Box>
 
               {/* Activity Level Slider */}
-              <div className="col-span-1">
-                <Typography className="mb-2 font-bold text-black">
-                  Desired Activity Level (1 to 5):
+              <Box sx={{ gridColumn: "1 / 2" }}>
+                <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Desired Activity Level
                 </Typography>
                 <Slider
                   value={preferences.activity_level}
@@ -170,15 +184,14 @@ export default function PreferencesPage() {
                   min={1}
                   max={5}
                   valueLabelDisplay="auto"
-                  className="mb-6"
                   color="primary"
                 />
-              </div>
+              </Box>
 
-              {/* mental health */}
-              <div className="col-span-1">
-                <Typography className="mb-2 font-bold text-black">
-                  Mental Health Priority (1 to 5):
+              {/* Mental Health Slider */}
+              <Box sx={{ gridColumn: "2 / 3" }}>
+                <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Mental Health Priority
                 </Typography>
                 <Slider
                   value={preferences.mental_health}
@@ -186,113 +199,118 @@ export default function PreferencesPage() {
                   min={1}
                   max={5}
                   valueLabelDisplay="auto"
-                  className="mb-6"
                   color="primary"
                 />
-              </div>
+              </Box>
+            </Box>
 
-              {/* Goals Section */}
-              <Typography
-                variant="h6"
-                className="mb-4 font-bold text-black col-span-2"
+            {/* Goals Section */}
+            <Divider sx={{ my: 4 }} />
+            <Typography variant="h5" gutterBottom sx={{ mb: 2 }}>
+              Goals
+            </Typography>
+
+            {goals.map((goal, index) => (
+              <Box
+                key={index}
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  borderRadius: 1,
+                  mb: 2,
+                  position: "relative",
+                }}
               >
-                Goals
-              </Typography>
+                {/* Goal Title */}
+                <TextField
+                  label={`Goal Title ${index + 1}`}
+                  value={goal.title}
+                  onChange={(e) => handleGoalChange(index, "title", e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  required
+                />
 
-              {goals.map((goal, index) => (
-                <div
-                  key={index}
-                  className="col-span-2 mb-6 border border-gray-200 p-4 rounded-lg"
-                >
-                  {/* Goal Title */}
-                  <TextField
-                    label={`Goal Title ${index + 1}`}
-                    value={goal.title}
-                    onChange={(e) =>
-                      handleGoalChange(index, "title", e.target.value)
-                    }
-                    fullWidth
-                    className="mb-4"
-                    required
-                  />
+                {/* Goal Date */}
+                <TextField
+                  label="Goal Date (Optional)"
+                  type="date"
+                  value={goal.goal_date}
+                  onChange={(e) =>
+                    handleGoalChange(index, "goal_date", e.target.value)
+                  }
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ mb: 2 }}
+                />
 
-                  {/* Goal Date (Optional) */}
-                  <TextField
-                    label="Goal Date (Optional)"
-                    type="date"
-                    value={goal.goal_date}
-                    onChange={(e) =>
-                      handleGoalChange(index, "goal_date", e.target.value)
-                    }
-                    fullWidth
-                    className="mb-4"
-                    InputLabelProps={{ shrink: true }}
-                  />
+                {/* Priority Level Slider */}
+                <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                  Priority Level
+                </Typography>
+                <Slider
+                  value={goal.priority}
+                  onChange={(e, newValue) =>
+                    handleGoalChange(index, "priority", newValue)
+                  }
+                  min={1}
+                  max={5}
+                  valueLabelDisplay="auto"
+                  sx={{ mb: 2 }}
+                  color="primary"
+                />
 
-                  {/* Priority Level */}
-                  <Typography className="mb-2 font-bold text-black">
-                    Priority Level (1 to 5):
-                  </Typography>
-                  <Slider
-                    value={goal.priority}
-                    onChange={(e, newValue) =>
-                      handleGoalChange(index, "priority", newValue)
-                    }
-                    min={1}
-                    max={5}
-                    valueLabelDisplay="auto"
-                    color="primary"
-                    className="mb-4"
-                  />
+                {/* Practice Time */}
+                <TextField
+                  label="Estimated Practice Time (Hours)"
+                  value={goal.practice_time}
+                  onChange={(e) =>
+                    handleGoalChange(index, "practice_time", e.target.value)
+                  }
+                  fullWidth
+                  required
+                />
 
-                  {/* Estimated Practice Time */}
-                  <TextField
-                    label="Estimated Practice Time (Hours)"
-                    value={goal.practice_time}
-                    onChange={(e) =>
-                      handleGoalChange(index, "practice_time", e.target.value)
-                    }
-                    fullWidth
-                    className="mb-4"
-                    required
-                  />
+                {/* Remove Goal Button */}
+                {goals.length > 1 && (
+                  <IconButton
+                    onClick={() => removeGoal(index)}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      color: "secondary.main",
+                    }}
+                  >
+                    <Delete />
+                  </IconButton>
+                )}
+              </Box>
+            ))}
 
-                  {/* Remove Goal Button */}
-                  {goals.length > 1 && (
-                    <IconButton
-                      onClick={() => removeGoal(index)}
-                      color="secondary"
-                    >
-                      <Delete />
-                    </IconButton>
-                  )}
-                </div>
-              ))}
+            {/* Add Goal Button */}
+            <Button
+              onClick={addGoal}
+              variant="contained"
+              startIcon={<AddCircle />}
+              sx={{ mb: 4, display: "block", mx: "auto" }}
+            >
+              Add Goal
+            </Button>
 
-              {/* Add Goal Button */}
-              <Button
-                onClick={addGoal}
-                variant="outlined"
-                startIcon={<AddCircle />}
-                className="col-span-2 mb-6"
-                color="primary"
-              >
-                Add Goal
-              </Button>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                className="col-span-2 bg-green-300 hover:bg-green-400 text-white"
-              >
-                Save Preferences
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{ backgroundColor: "primary.main", color: "white", py: 1.5 }}
+            >
+              Save Preferences
+            </Button>
+          </form>
+        </Box>
+      </Box>
     </ThemeProvider>
   );
 }
